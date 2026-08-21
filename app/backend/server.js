@@ -51,3 +51,6 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// Export the app for testing purposes 
+module.exports = app
