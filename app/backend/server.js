@@ -2,35 +2,52 @@ const express = require('express');
 const client = require('prom-client');
 
 const app = express();
-// Thêm dòng này để ẩn thông tin Express
+const PORT = 5000;
+
+// Hide Express information
 app.disable('x-powered-by');
 
+// Prometheus metrics registry
 const register = new client.Registry();
 
 client.collectDefaultMetrics({
     register
 });
 
+// HTTP request counter
 const requestCounter = new client.Counter({
-    name:'http_requests_total',
-    help:'Total Requests'
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests'
 });
+
 register.registerMetric(requestCounter);
 
-app.use((req,res,next)=>{
+// Count HTTP requests
+app.use((req, res, next) => {
     requestCounter.inc();
     next();
 });
 
-app.get('/metrics', async(req,res)=>{
-    res.set('Content-Type',register.contentType);
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        service: 'chat-backend'
+    });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
 });
 
-app.get('/', (req,res)=>{
+// Root endpoint
+app.get('/', (req, res) => {
     res.send('Backend running');
 });
 
-app.listen(5000, ()=>{
-    console.log('Server running on 5000');
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
